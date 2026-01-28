@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Miamor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Homemade+Apple&family=Poppins:wght@200;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #080808;
+            --accent: #FF2D55;
+            --white: #ffffff;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background: var(--bg-dark);
+            color: var(--white);
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.8) 100%);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        #bg-blur {
+            position: fixed;
+            inset: -20px;
+            background-size: cover;
+            background-position: center;
+            filter: blur(60px) brightness(0.25);
+            transition: background-image 2.5s ease-in-out;
+            z-index: 1;
+        }
+
+        #particles {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .main-wrapper {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .polaroid-container {
+            position: relative;
+            width: 80%;
+            max-width: 300px;
+            height: 380px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .polaroid-frame {
+            background: #fff;
+            padding: 12px 12px 60px 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            will-change: opacity, transform;
+            opacity: 0;
+            transition: opacity 1.5s ease, transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transform: scale(0.9) translateY(20px);
+            overflow: hidden;
+            position: absolute;
+        }
+
+        /* Frame tampil di awal sebelum diklik */
+        .polaroid-frame.init {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        .polaroid-frame.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        .media-box {
+            width: 100%;
+            aspect-ratio: 1/1;
+            overflow: hidden;
+            position: relative;
+            background: #fdfdfd;
+        }
+
+        .media-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 8s linear;
+            transform: scale(1.15);
+        }
+
+        .polaroid-frame.active .media-box img {
+            transform: scale(1);
+        }
+
+        .handwritten {
+            position: absolute;
+            bottom: 15px;
+            left: 0; width: 100%;
+            text-align: center;
+            font-family: 'Homemade Apple', cursive;
+            color: #222;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .message-container {
+            margin-top: 30px;
+            text-align: center;
+            min-height: 80px;
+            padding: 0 40px;
+        }
+
+        #p-text {
+            font-size: 0.9rem;
+            font-weight: 200;
+            line-height: 1.7;
+            letter-spacing: 0.5px;
+            opacity: 0; /* Mulai dari nol untuk animasi fade in */
+            transition: opacity 1s ease;
+            margin: 0;
+        }
+
+        /* Kelas untuk nampilin teks pertama kali */
+        #p-text.visible { opacity: 0.8; }
+
+        .music-player {
+            position: absolute;
+            bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255,255,255,0.08);
+            padding: 8px 16px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        .play-btn {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none; color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .bar { width: 2px; background: rgba(255,255,255,0.5); border-radius: 1px; }
+        .bar.anim { animation: bounce 0.6s ease infinite alternate; }
+        @keyframes bounce { from { height: 2px; } to { height: 12px; } }
+    </style>
+</head>
+<body>
+
+    <div id="bg-blur"></div>
+    <canvas id="particles"></canvas>
+
+    <div class="main-wrapper">
+        <div class="polaroid-container">
+            <div id="p-frame" class="polaroid-frame init">
+                <div class="media-box">
+                    <img id="p-img" src="bia4.jpg">
+                </div>
+                <div class="handwritten" id="p-date">January 2026</div>
+            </div>
+        </div>
+
+        <div class="message-container">
+            <p id="p-text" class="visible">Tap the button below to start our story.</p>
+        </div>
+
+        <div class="music-player" onclick="togglePlay()">
+            <button class="play-btn" id="btn-icon">▶</button>
+            <div style="display: flex; gap: 3px; height: 10px; align-items: flex-end;">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
+            <span style="font-size: 0.6rem; letter-spacing: 1px; opacity: 0.6;">Chris Brown - Angel Numbers.</span>
+        </div>
+    </div>
+
+    <audio id="song" loop preload="auto">
+        <source src="Chris Brown - Angel Numbers (best part loop).mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const content = [
+            { img: "bia1.jpg", text: "Every breath you take is a melody I want to listen to forever.", date: "Soulmate" },
+            { img: "bia2.jpg", text: "In your eyes, I found a home I never knew I was looking for.", date: "My Sanctuary" },
+            { img: "bia3.jpg", text: "The world is loud, but with you, everything feels so peaceful.", date: "Safe Place" },
+            { img: "bia4.jpg", text: "I want to write a thousand futures, and you are in every single page.", date: "Eternal" },
+            { img: "bia5.jpg", text: "You are the most beautiful chapter in the book of my life.", date: "Masterpiece" },
+            { img: "bia6.jpg", text: "I fall for you more with every sunrise we share together.", date: "Endless Love" },
+            { img: "bia7.jpg", text: "The universe shines a little brighter whenever you smile.", date: "My Light" },
+            { img: "bia1.jpg", text: "And before this ends... don't forget to send me more of your beautiful photos soon. I miss you.", date: "I love you -zahran" }
+        ];
+
+        let index = 0;
+        let isPlaying = false;
+        const song = document.getElementById('song');
+        const frame = document.getElementById('p-frame');
+        const img = document.getElementById('p-img');
+        const dateText = document.getElementById('p-date');
+        const mainText = document.getElementById('p-text');
+        const bgBlur = document.getElementById('bg-blur');
+        const bars = document.querySelectorAll('.bar');
+
+        // Set initial background
+        bgBlur.style.backgroundImage = "url('bia1.jpg')";
+
+        function updateSlide() {
+            // Hapus class init pas pertama kali jalan
+            frame.classList.remove('init');
+            
+            frame.style.opacity = "0";
+            mainText.style.opacity = "0";
+            
+            setTimeout(() => {
+                const data = content[index];
+                
+                img.src = data.img;
+                bgBlur.style.backgroundImage = `url(${data.img})`;
+                dateText.innerText = data.date;
+                mainText.innerText = data.text;
+                
+                frame.classList.add('active');
+                frame.style.opacity = "1";
+                
+                setTimeout(() => {
+                    mainText.style.opacity = "0.8";
+                }, 400);
+                
+                index = (index + 1) % content.length;
+            }, 1000); 
+        }
+
+        function togglePlay() {
+            if(!isPlaying) {
+                song.play().catch(e => console.log("Audio play failed: ", e));
+                document.getElementById('btn-icon').innerText = '❚❚';
+                bars.forEach(b => b.classList.add('anim'));
+                
+                // Mulai perjalanan slide
+                updateSlide();
+                setInterval(updateSlide, 8500); 
+                isPlaying = true;
+            }
+        }
+
+        // Particles setup
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        let particlesArray = [];
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        class Particle {
+            constructor() { this.init(); }
+            init() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.speedY = Math.random() * 0.3 - 0.1;
+                this.opacity = Math.random() * 0.4;
+            }
+            update() {
+                this.y += this.speedY;
+                if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+        for (let i = 0; i < 40; i++) particlesArray.push(new Particle());
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particlesArray.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>

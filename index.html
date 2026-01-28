@@ -205,104 +205,116 @@
     </audio>
 
     <script>
-        const content = [
-            { img: "bia1.jpg", text: "Every breath you take is a melody I want to listen to forever.", date: "Soulmate" },
-            { img: "bia2.jpg", text: "In your eyes, I found a home I never knew I was looking for.", date: "My Sanctuary" },
-            { img: "bia3.jpg", text: "The world is loud, but with you, everything feels so peaceful.", date: "Safe Place" },
-            { img: "bia4.jpg", text: "I want to write a thousand futures, and you are in every single page.", date: "Eternal" },
-            { img: "bia5.jpg", text: "You are the most beautiful chapter in the book of my life.", date: "Masterpiece" },
-            { img: "bia6.jpg", text: "I fall for you more with every sunrise we share together.", date: "Endless Love" },
-            { img: "bia7.jpg", text: "The universe shines a little brighter whenever you smile.", date: "My Light" },
-            { img: "bia1.jpg", text: "And before this ends... don't forget to send me more of your beautiful photos soon. I miss you.", date: "I love you -zahran" }
-        ];
+    const content = [
+        { img: "bia1.jpg", text: "Every breath you take is a melody I want to listen to forever.", date: "Soulmate" },
+        { img: "bia2.jpg", text: "In your eyes, I found a home I never knew I was looking for.", date: "My Sanctuary" },
+        { img: "bia3.jpg", text: "The world is loud, but with you, everything feels so peaceful.", date: "Safe Place" },
+        { img: "bia4.jpg", text: "I want to write a thousand futures, and you are in every single page.", date: "Eternal" },
+        { img: "bia5.jpg", text: "You are the most beautiful chapter in the book of my life.", date: "Masterpiece" },
+        { img: "bia6.jpg", text: "I fall for you more with every sunrise we share together.", date: "Endless Love" },
+        { img: "bia7.jpg", text: "The universe shines a little brighter whenever you smile.", date: "My Light" },
+        { img: "bia1.jpg", text: "And before this ends... don't forget to send me more of your beautiful photos soon. I miss you.", date: "I love you -zahran" }
+    ];
 
-        let index = 0;
-        let isPlaying = false;
-        const song = document.getElementById('song');
-        const frame = document.getElementById('p-frame');
-        const img = document.getElementById('p-img');
-        const dateText = document.getElementById('p-date');
-        const mainText = document.getElementById('p-text');
-        const bgBlur = document.getElementById('bg-blur');
-        const bars = document.querySelectorAll('.bar');
+    let index = 0;
+    let isPlaying = false;
+    let slideInterval; // Variable buat nyimpen timer
 
-        // Set initial background
-        bgBlur.style.backgroundImage = "url('bia1.jpg')";
+    const song = document.getElementById('song');
+    const frame = document.getElementById('p-frame');
+    const img = document.getElementById('p-img');
+    const dateText = document.getElementById('p-date');
+    const mainText = document.getElementById('p-text');
+    const bgBlur = document.getElementById('bg-blur');
+    const bars = document.querySelectorAll('.bar');
+    const btnIcon = document.getElementById('btn-icon');
 
-        function updateSlide() {
-            // Hapus class init pas pertama kali jalan
-            frame.classList.remove('init');
+    // Set initial background
+    bgBlur.style.backgroundImage = "url('bia1.jpg')";
+
+    function updateSlide() {
+        frame.classList.remove('init');
+        frame.style.opacity = "0";
+        mainText.style.opacity = "0";
+        
+        setTimeout(() => {
+            const data = content[index];
+            img.src = data.img;
+            bgBlur.style.backgroundImage = `url(${data.img})`;
+            dateText.innerText = data.date;
+            mainText.innerText = data.text;
             
-            frame.style.opacity = "0";
-            mainText.style.opacity = "0";
+            frame.classList.add('active');
+            frame.style.opacity = "1";
             
             setTimeout(() => {
-                const data = content[index];
-                
-                img.src = data.img;
-                bgBlur.style.backgroundImage = `url(${data.img})`;
-                dateText.innerText = data.date;
-                mainText.innerText = data.text;
-                
-                frame.classList.add('active');
-                frame.style.opacity = "1";
-                
-                setTimeout(() => {
-                    mainText.style.opacity = "0.8";
-                }, 400);
-                
-                index = (index + 1) % content.length;
-            }, 1000); 
-        }
+                mainText.style.opacity = "0.8";
+            }, 400);
+            
+            index = (index + 1) % content.length;
+        }, 1000); 
+    }
 
-        function togglePlay() {
-            if(!isPlaying) {
-                song.play().catch(e => console.log("Audio play failed: ", e));
-                document.getElementById('btn-icon').innerText = '❚❚';
-                bars.forEach(b => b.classList.add('anim'));
-                
-                // Mulai perjalanan slide
-                updateSlide();
-                setInterval(updateSlide, 8500); 
-                isPlaying = true;
-            }
+    function togglePlay() {
+        if(!isPlaying) {
+            // MODE: PLAY
+            song.play().catch(e => console.log("Audio play failed: ", e));
+            btnIcon.innerText = '❚❚';
+            bars.forEach(b => b.classList.add('anim'));
+            
+            // Jalankan slide pertama kali
+            updateSlide();
+            
+            // Set interval supaya jalan terus setiap 8.5 detik
+            slideInterval = setInterval(updateSlide, 8500); 
+            isPlaying = true;
+        } else {
+            // MODE: PAUSE
+            song.pause();
+            btnIcon.innerText = '▶';
+            bars.forEach(b => b.classList.remove('anim'));
+            
+            // Hentikan timer slide supaya foto gak ganti-ganti pas musik mati
+            clearInterval(slideInterval);
+            isPlaying = false;
         }
+    }
 
-        // Particles setup
-        const canvas = document.getElementById('particles');
-        const ctx = canvas.getContext('2d');
-        let particlesArray = [];
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+    // --- Sisanya (Particles & Resize) tetep sama ---
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particlesArray = [];
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    class Particle {
+        constructor() { this.init(); }
+        init() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 1.5 + 0.5;
+            this.speedY = Math.random() * 0.3 - 0.1;
+            this.opacity = Math.random() * 0.4;
         }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-        class Particle {
-            constructor() { this.init(); }
-            init() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 1.5 + 0.5;
-                this.speedY = Math.random() * 0.3 - 0.1;
-                this.opacity = Math.random() * 0.4;
-            }
-            update() {
-                this.y += this.speedY;
-                if (this.y < 0) this.y = canvas.height;
-            }
-            draw() {
-                ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-            }
+        update() {
+            this.y += this.speedY;
+            if (this.y < 0) this.y = canvas.height;
         }
-        for (let i = 0; i < 40; i++) particlesArray.push(new Particle());
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particlesArray.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animate);
+        draw() {
+            ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
         }
-        animate();
-    </script>
+    }
+    for (let i = 0; i < 40; i++) particlesArray.push(new Particle());
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particlesArray.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+    }
+    animate();
+</script>
 </body>
 </html>
